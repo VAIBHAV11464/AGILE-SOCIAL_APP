@@ -225,4 +225,3 @@ try {
   await refreshFeed();
 
 } catch (error) { notify('Could not load the feed. Please refresh and try again.', true); }
-

@@ -68,7 +68,13 @@ kubectl get deployments,services,pvc -n agile-social
 ./scripts/verify.ps1 -Version v1
 ```
 
-On installations where NodePort is not forwarded to the Windows host, run `kubectl port-forward -n agile-social service/social-app-v1 30081:3000` in a terminal. Repeat for v2 and v3 on ports 30082 and 30083.
+Docker Desktop on this computer does not expose the NodePorts directly to Windows. Start the provided local forwarding helper after the three deployments are ready:
+
+```powershell
+./scripts/start-demo.ps1
+```
+
+It forwards the three Kubernetes services to localhost ports 30081, 30082 and 30083 in the background, checks each version, and writes logs in the ignored `data/` folder. Rerun it after restarting Docker Desktop or Windows. You can also run `kubectl port-forward -n agile-social service/social-app-v1 30081:3000` in a terminal for a single version.
 
 ## Demonstration
 

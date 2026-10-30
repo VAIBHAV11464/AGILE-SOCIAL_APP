@@ -21,7 +21,7 @@ pipeline {
         }
         stage('Build Docker image') {
             steps {
-                bat 'docker build --label org.opencontainers.image.revision=%GIT_COMMIT% -t %DOCKER_USER%/%IMAGE_NAME%:%VERSION% .'
+                bat 'for /f %%i in ('git rev-parse HEAD') do docker build --label org.opencontainers.image.revision=%%i -t %DOCKER_USER%/%IMAGE_NAME%:%VERSION% .'
                 bat 'docker run --rm %DOCKER_USER%/%IMAGE_NAME%:%VERSION% npm test'
             }
         }
@@ -30,6 +30,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'social-dockerhub', usernameVariable: 'HUB_USER', passwordVariable: 'HUB_TOKEN')]) {
                     powershell '''
                         $ErrorActionPreference = 'Stop'
+                        $OutputEncoding = New-Object System.Text.UTF8Encoding($false)
                         $env:DOCKER_CONFIG = Join-Path $env:WORKSPACE '.pipeline-docker'
                         New-Item -ItemType Directory -Force $env:DOCKER_CONFIG | Out-Null
                         try {

@@ -4,11 +4,17 @@ const feed = $('#feed');
 const emptyState = feed.firstElementChild.cloneNode(true);
 const author = $('#author');
 const content = $('#content');
+const clientId = (() => {
+  let id;
+  try { id = localStorage.getItem('social-client-id'); } catch {}
+  if (!id) { id = crypto.randomUUID(); try { localStorage.setItem('social-client-id', id); } catch {} }
+  return id;
+})();
 let release;
 let noticeTimer;
 
 async function api(path, options = {}) {
-  const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
+  const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json', 'X-Client-Id': clientId, ...options.headers } });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Could not complete that action.');
   return data;
@@ -39,6 +45,23 @@ async function refreshFeed() {
     const date = $('.post-date', article);
     date.dateTime = post.created_at;
     date.textContent = new Date(post.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    const likeButton = $('.like-button', article);
+    let liked = Boolean(post.liked);
+    const showLike = (count, value) => {
+      liked = value;
+      likeButton.classList.toggle('liked', value);
+      likeButton.setAttribute('aria-pressed', String(value));
+      $('.like-label', article).textContent = `${value ? 'Liked' : 'Like'}${count ? ` · ${count}` : ''}`;
+    };
+    showLike(post.like_count, liked);
+    likeButton.addEventListener('click', async () => {
+      likeButton.disabled = true;
+      try {
+        const result = await api(`/api/posts/${post.id}/like`, { method: 'POST', body: JSON.stringify({ clientId, liked: !liked }) });
+        showLike(result.like_count, result.liked);
+      } catch (error) { notify(error.message, true); }
+      finally { likeButton.disabled = false; }
+    });
     feed.append(article);
   }
 }

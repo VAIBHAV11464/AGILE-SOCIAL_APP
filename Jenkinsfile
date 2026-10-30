@@ -28,20 +28,18 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'social-dockerhub', usernameVariable: 'HUB_USER', passwordVariable: 'HUB_TOKEN')]) {
-                    powershell '''
-                        $ErrorActionPreference = 'Stop'
-                        $OutputEncoding = New-Object System.Text.UTF8Encoding($false)
-                        $env:DOCKER_CONFIG = Join-Path $env:WORKSPACE '.pipeline-docker'
-                        New-Item -ItemType Directory -Force $env:DOCKER_CONFIG | Out-Null
-                        try {
-                            $env:HUB_TOKEN | docker login --username $env:HUB_USER --password-stdin
-                            if ($LASTEXITCODE -ne 0) { throw 'Docker Hub login failed' }
-                            docker push "$($env:DOCKER_USER)/$($env:IMAGE_NAME):$($env:VERSION)"
-                            if ($LASTEXITCODE -ne 0) { throw 'Docker push failed' }
-                        } finally {
-                            if (Test-Path -LiteralPath $env:DOCKER_CONFIG) { Remove-Item -LiteralPath $env:DOCKER_CONFIG -Recurse -Force }
+                    withEnv(["DOCKER_CONFIG=${env.WORKSPACE}\\.pipeline-docker"]) {
+                        script {
+                            try {
+                                bat """@echo off
+node -e "const r=require('child_process').spawnSync('docker',['login','--username',process.env.HUB_USER,'--password-stdin'],{input:process.env.HUB_TOKEN+String.fromCharCode(10),stdio:['pipe','inherit','inherit']});process.exit(r.status===0?0:1)"
+"""
+                                bat 'docker push %DOCKER_USER%/%IMAGE_NAME%:%VERSION%'
+                            } finally {
+                                dir('.pipeline-docker') { deleteDir() }
+                            }
                         }
-                    '''
+                    }
                 }
             }
         }

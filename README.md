@@ -4,7 +4,7 @@ A small social feed developed in three incremental releases for a DevOps course 
 
 ## Versions
 
-| Git tag and branch | Features | Kubernetes service | Local URL |
+| Git tag with branch release/tag | Features | Kubernetes service | Local URL |
 | --- | --- | --- | --- |
 | v1 | Create and read posts | social-app-v1 | http://localhost:30081 |
 | v2 | Posts and one like per browser | social-app-v2 | http://localhost:30082 |
@@ -47,7 +47,7 @@ Use v2 or v3 for the other releases. Enter a Docker Hub personal access token wh
 
 ## Jenkins pipeline
 
-The `agile-social-app` job loads `Jenkinsfile` from the main branch. Its VERSION parameter selects a release tag. The stages check out the release, run tests, build and test the Docker image, push to Docker Hub, deploy Kubernetes resources, and verify the running service.
+The `agile-social-app` job loads `Jenkinsfile` from the main branch. Its VERSION parameter selects a release tag. The pipeline passes the Docker token directly to standard input through Node.js to avoid Windows shell encoding changes. The stages check out the release, run tests, build and test the Docker image, push to Docker Hub, deploy Kubernetes resources, and verify the running service.
 
 This Windows installation uses Node.js in `C:\Program Files\nodejs`, Git in `D:\Git\cmd`, and the current user's Docker Desktop command-line tools. Adjust the Jenkinsfile PATH on another machine.
 

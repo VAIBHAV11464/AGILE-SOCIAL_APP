@@ -21,7 +21,7 @@ pipeline {
         }
         stage('Build Docker image') {
             steps {
-                bat 'for /f %%i in ('git rev-parse HEAD') do docker build --label org.opencontainers.image.revision=%%i -t %DOCKER_USER%/%IMAGE_NAME%:%VERSION% .'
+                bat "for /f %%i in ('git rev-parse HEAD') do docker build --label org.opencontainers.image.revision=%%i -t %DOCKER_USER%/%IMAGE_NAME%:%VERSION% ."
                 bat 'docker run --rm %DOCKER_USER%/%IMAGE_NAME%:%VERSION% npm test'
             }
         }

@@ -4,11 +4,12 @@ New-Item -ItemType Directory -Path $runtime -Force | Out-Null
 $kubectl = (Get-Command kubectl.exe -ErrorAction Stop).Source
 foreach ($version in @('v1','v2','v3')) {
     $port = @{v1=30081;v2=30082;v3=30083}[$version]
-    try {
-        $health = Invoke-RestMethod "http://127.0.0.1:$port/health" -TimeoutSec 2
+    $health = $null
+    try { $health = Invoke-RestMethod "http://127.0.0.1:$port/health" -TimeoutSec 2 } catch {}
+    if ($health) {
         if ($health.version -eq $version) { Write-Output "$version already available at http://localhost:$port"; continue }
         throw "Port $port is used by a different application."
-    } catch [System.Net.WebException] {}
+    }
     $out = Join-Path $runtime "forward-$version.log"
     $err = Join-Path $runtime "forward-$version-error.log"
     $forward = Start-Process -FilePath $kubectl -ArgumentList @('port-forward','-n','agile-social',"service/social-app-$version", "$($port):3000",'--address','127.0.0.1') -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err -PassThru

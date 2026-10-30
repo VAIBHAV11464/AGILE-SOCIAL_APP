@@ -1,8 +1,9 @@
 pipeline {
     agent any
-    options { timestamps(); disableConcurrentBuilds(); buildDiscarder(logRotator(numToKeepStr: '12')) }
+    options { skipDefaultCheckout(); timestamps(); disableConcurrentBuilds(); buildDiscarder(logRotator(numToKeepStr: '12')) }
     parameters { choice(name: 'VERSION', choices: ['v1', 'v2', 'v3'], description: 'Release tag to build, publish and deploy') }
     environment {
+        VERSION = "${params.VERSION ?: 'v1'}"
         DOCKER_USER = 'vaibhav11464'
         IMAGE_NAME = 'agile-social-app'
         DOCKER_HOST = 'npipe:////./pipe/dockerDesktopLinuxEngine'
